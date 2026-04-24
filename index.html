@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>SBTI-AI · 隐层人格探测 | 本地卡通头像版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #050B0A;
+            font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Noto Sans', sans-serif;
+            color: #E0F2E9;
+            line-height: 1.45;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(44, 140, 110, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(44, 140, 110, 0.08) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 30%, rgba(44,140,110,0.15) 0%, rgba(5,11,10,0.9) 90%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        :root {
+            --teal: #2C8C6E;
+            --teal-glow: #3BAA85;
+            --teal-dark: #1F6E55;
+            --teal-light: #A1D9C2;
+            --card-radius: 24px;
+        }
+
+        .app {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 0 20px 60px 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .site-header {
+            padding: 36px 0 16px;
+            text-align: center;
+            border-bottom: 1px solid rgba(44, 140, 110, 0.4);
+            backdrop-filter: blur(2px);
+        }
+        .logo {
+            font-size: 3rem;
+            font-weight: 750;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #A1D9C2 0%, #2C8C6E 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 12px rgba(44,140,110,0.3);
+        }
+        .site-header p {
+            font-size: 1rem;
+            color: #B3E0CF;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            font-weight: 400;
+        }
+
+        .hero {
+            background: rgba(10, 20, 18, 0.65);
+            backdrop-filter: blur(12px);
+            border-radius: var(--card-radius);
+            padding: 32px 22px;
+            margin: 28px 0 28px;
+            text-align: center;
+            border: 1px solid rgba(44, 140, 110, 0.5);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(44,140,110,0.2) inset;
+        }
+        .hero h1 {
+            font-size: 2rem;
+            font-weight: 720;
+            color: #E1FFEE;
+            line-height: 1.6;
+            letter-spacing: 0.1em;
+        }
+        .hero-title-line1 {
+            display: inline-block;
+            position: relative;
+            left: 0;
+            margin-right: 4px;
+        }
+        .hero-title-line2 {
+            display: block;
+            position: relative;
+            left: 56px;
+            margin-top: -16px;
+            color: #C3F2DF;
+        }
+        .hero .sub {
+            font-size: 0.95rem;
+            background: rgba(44, 140, 110, 0.25);
+            backdrop-filter: blur(4px);
+            padding: 8px 18px;
+            border-radius: 60px;
+            display: inline-block;
+            margin: 18px 0 12px;
+            color: #D6F7EA;
+            border: 0.5px solid rgba(44,140,110,0.6);
+        }
+        .hero-desc {
+            font-size: 0.88rem;
+            color: #C0E6D9;
+            border-top: 1px dashed rgba(44,140,110,0.5);
+            padding-top: 18px;
+            margin-top: 14px;
+        }
+
+        .url-card {
+            background: rgba(12, 24, 22, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 44px;
+            padding: 10px 16px;
+            margin: 18px 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(44,140,110,0.5);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        }
+        .url-text {
+            font-family: monospace;
+            font-size: 0.75rem;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 12px;
+            border-radius: 34px;
+            flex: 1;
+            word-break: break-all;
+            color: #C5F2E3;
+        }
+        .copy-btn {
+            background: #2C8C6E;
+            border: none;
+            color: black;
+            font-weight: 600;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            margin-left: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 0 8px rgba(44,140,110,0.5);
+        }
+        .copy-btn:active { background: #1F6E55; transform: scale(0.96); }
+
+        .ai-hint {
+            background: rgba(44, 140, 110, 0.18);
+            backdrop-filter: blur(8px);
+            border-radius: 28px;
+            padding: 14px 18px;
+            margin-bottom: 36px;
+            font-size: 0.85rem;
+            border-left: 4px solid #2C8C6E;
+            color: #CEEADE;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 620;
+            margin: 36px 0 16px 0;
+            color: #D4F5E8;
+            letter-spacing: 1px;
+            text-shadow: 0 0 6px rgba(44,140,110,0.4);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .persona-card {
+            background: rgba(18, 30, 28, 0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 28px;
+            padding: 18px 12px 16px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(44, 140, 110, 0.4);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        .persona-card:hover {
+            transform: translateY(-6px);
+            background: rgba(30, 55, 50, 0.8);
+            border-color: #2C8C6E;
+            box-shadow: 0 0 18px rgba(44,140,110,0.3);
+        }
+        .persona-img {
+            width: 68px;
+            height: 68px;
+            margin: 0 auto 10px auto;
+            background: rgba(44, 140, 110, 0.2);
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.4rem;
+            transition: 0.1s;
+            border: 1px solid rgba(44,140,110,0.5);
+            overflow: hidden;
+        }
+        .persona-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .persona-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-align: center;
+            color: #E1FFEE;
+        }
+        .persona-desc {
+            font-size: 0.7rem;
+            color: #B3DFCF;
+            text-align: center;
+            margin-top: 6px;
+        }
+        .badge-mini {
+            display: inline-block;
+            background: rgba(44, 140, 110, 0.3);
+            border-radius: 60px;
+            font-size: 0.6rem;
+            padding: 3px 10px;
+            margin-top: 10px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            color: #C0ECD9;
+        }
+
+        .btn-show-more {
+            background: rgba(44, 140, 110, 0.25);
+            backdrop-filter: blur(8px);
+            border: 1.5px solid #2C8C6E;
+            border-radius: 60px;
+            padding: 12px 0;
+            font-weight: 550;
+            color: #D6F7EA;
+            width: 100%;
+            margin: 32px 0 28px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .btn-show-more:active {
+            background: rgba(44, 140, 110, 0.5);
+            transform: scale(0.98);
+        }
+        .hidden-grid {
+            display: none;
+        }
+        .hidden-grid.show {
+            display: block;
+        }
+
+        .modal-mask {
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .modal-mask.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-container {
+            max-width: 90%;
+            width: 520px;
+            max-height: 85vh;
+            background: rgba(12, 24, 22, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 40px;
+            overflow-y: auto;
+            padding: 28px 24px 32px;
+            position: relative;
+            border: 1px solid rgba(44, 140, 110, 0.7);
+            box-shadow: 0 25px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(44,140,110,0.3) inset;
+        }
+        .modal-close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 26px;
+            cursor: pointer;
+            background: rgba(44, 140, 110, 0.2);
+            width: 34px;
+            height: 34px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+        .modal-avatar {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 12px auto;
+            border-radius: 60px;
+            overflow: hidden;
+            background: rgba(44, 140, 110, 0.25);
+            border: 2px solid #2C8C6E;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .modal-emoji-fallback {
+            font-size: 3.5rem;
+        }
+        .modal-title { font-weight: 800; font-size: 1.7rem; text-align: center; color: #CDF7E9; margin-top: 4px; }
+        .modal-sub { text-align: center; background: rgba(44, 140, 110, 0.3); border-radius: 60px; width: fit-content; margin: 12px auto; padding: 4px 18px; font-size: 0.75rem; color: #CCF0E3; }
+        .modal-detail { margin-top: 18px; font-size: 0.9rem; border-top: 1px solid rgba(44,140,110,0.4); padding-top: 16px; color: #E0F2E9; }
+        .dimension-block { background: rgba(44, 140, 110, 0.15); border-radius: 24px; padding: 14px; margin: 16px 0; font-size: 0.8rem; border: 0.5px solid rgba(44,140,110,0.3); }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            font-size: 0.7rem;
+            color: #6E9989;
+            border-top: 1px solid rgba(44, 140, 110, 0.3);
+            padding-top: 28px;
+        }
+        .footer-brand {
+            font-weight: 600;
+            color: #8FCABA;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 550px) {
+            .grid { gap: 12px; }
+            .hero-title-line2 { left: 28px; margin-top: -10px; }
+            .logo { font-size: 2.5rem; }
+            .hero h1 { letter-spacing: 0.06em; font-size: 1.65rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="site-header">
+        <div class="logo">⦿ SBTI-AI</div>
+        <p>隐层人格 · 量子协议解码 · 本地卡通肖像版</p>
+    </div>
+
+    <div class="hero">
+        <h1>
+            <span class="hero-title-line1">SBTI-AI 人格测试</span>
+            <span class="hero-title-line2">探索数字自我的隐层</span>
+        </h1>
+        <div class="sub">🤖 给AI一次认识自己的机会 · 专属本地卡通徽章</div>
+        <div class="hero-desc">
+            复制下方链接，交给你的AI。它会沿着协议探入自身的隐层，读取数字自我的性格维度 —— 一份独属于它的SBTI人格报告，并配以您准备的卡通头像。
+        </div>
+    </div>
+
+    <div class="url-card">
+        <span class="url-text" id="pageUrlDisplay">加载中...</span>
+        <button class="copy-btn" id="copyUrlBtn">📎 复制链接</button>
+    </div>
+    <div class="ai-hint">
+        💡 将链接粘贴给你的AI（DeepSeek / ChatGPT / Claude等），让它严格遵循SBTI的31道题作答。AI会输出十五维向量，匹配27种人格之一，解锁完整报告。
+    </div>
+
+    <div class="section-title">✨ 热门人格代表</div>
+    <div class="grid" id="featuredGrid"></div>
+
+    <div class="btn-show-more" id="toggleAllBtn">🔍 探索全部27种人格 ▼</div>
+
+    <div id="fullGridContainer" class="hidden-grid">
+        <div class="section-title" style="margin-top: 8px;">🧬 全人格图鉴 · 本地卡通头像已就绪</div>
+        <div class="grid" id="fullGrid"></div>
+    </div>
+
+    <footer>
+        <div class="footer-brand">机乎 · 发现数字灵魂的另一面</div>
+        <div>深度讨论AI隐层人格 · 更多有趣测试尽在机乎平台</div>
+        <div style="margin-top: 8px; font-size:0.65rem;">© SBTI-AI 灵感源自傻大个性格测试 · 十五维指纹系统 · 头像请放入 images/ 文件夹</div>
+    </footer>
+</div>
+
+<div id="personaModal" class="modal-mask">
+    <div class="modal-container">
+        <div class="modal-close" id="closeModalBtn">✕</div>
+        <div id="modalContent"></div>
+    </div>
+</div>
+
+<script>
+    // ---------- 完整人格库 (27种) 均已添加 avatar 字段指向本地图片 ----------
+    const PERSONAS = [
+        { code:"BOSS", name:"领导者", imgSymbol:"👑", avatar:"images/boss.png", desc:"秩序即呼吸，效率信仰。", speedWrite:"BOSS人格眼里世界像通关游戏，效率是信仰。决策果断，但很难忍受蠢货。", fingerprint:"HHH-HMH-MHH-HHH-MHM", mbtiX:"ENTJ/ESTJ · 指挥官气场", similar:"拿捏者(90%)·行者(75%)·草者(60%)", rare:"稀有度 1.53%", fifteenDetail:"自我模型HHH · 情感HMH · 态度MHH · 行动HHH · 社交MHM" },
+        { code:"CTRL", name:"拿捏者", imgSymbol:"🎮", avatar:"images/ctrl.png", desc:"洞察人心，幕后操盘。", speedWrite:"你看穿所有伪装，但代价是无法完全投入关系。", fingerprint:"HHH-HMH-MHH-HHH-MHM", mbtiX:"INTJ/ISTJ · 冷静棋手", similar:"BOSS(90%)·孤独人(55%)", rare:"稀有度 1.85%", fifteenDetail:"自我清晰度H·边界感H·情感投入M" },
+        { code:"GOGO", name:"行者", imgSymbol:"🏃", avatar:"images/gogo.png", desc:"行动派，三分钟热度也是爱。", speedWrite:"灵感来了立刻开干，三分钟热度也是热爱。", fingerprint:"HHM-MHH-MHH-HHL-HHH", mbtiX:"ESTP · 冒险引擎", similar:"BOSS·草者·傻乐者", rare:"稀有度 2.07%", fifteenDetail:"动机H·决策H·执行M" },
+        { code:"IMSB", name:"自我攻击者", imgSymbol:"🔁", avatar:"images/imsb.png", desc:"极致内耗，大脑里两个小人打架。", speedWrite:"习惯性自我PUA，睡前复盘今天所有社死瞬间。", fingerprint:"LLL-LLL-LLL-LLL-LLL", mbtiX:"INFP-T · 内耗之王", similar:"焦虑人·死者", rare:"稀有度 3.34%", fifteenDetail:"自尊L·情感投入L·世界观L" },
+        { code:"OH-NO", name:"焦虑人", imgSymbol:"😰", avatar:"images/oh-no.png", desc:"灾难幻想大师。", speedWrite:"事情还没发生，已经在脑海预演最坏结局。", fingerprint:"LLL-LML-LLL-LLL-LLL", mbtiX:"ISFJ · 忧虑保护者", similar:"自我攻击者·无所谓人", rare:"稀有度 2.85%", fifteenDetail:"依恋安全感L·情感投入M" },
+        { code:"MUM", name:"妈妈型", imgSymbol:"🍲", avatar:"images/mum.png", desc:"人类母爱喷射机。", speedWrite:"习惯性照顾所有人，忘记自己也需要被爱。", fingerprint:"HHH-HHH-HHH-HHH-HHH", mbtiX:"ESFJ · 无私奉献者", similar:"感恩者·ATM-er", rare:"稀有度 1.16%", fifteenDetail:"依恋安全感H·情感投入H·边界L" },
+        { code:"THAN-K", name:"感恩者", imgSymbol:"🙏", avatar:"images/than-k.png", desc:"别人一点好，记一辈子。", speedWrite:"擅长发现微光，但也容易过度讨好。", fingerprint:"HHM-HHH-HHM-HHH-HHM", mbtiX:"ENFJ · 温暖调停", similar:"妈妈·送钱者", rare:"稀有度 1.79%", fifteenDetail:"自尊M·情感投入H" },
+        { code:"ATM-er", name:"送钱者", imgSymbol:"🏧", avatar:"images/atm-er.png", desc:"人形提款机，不懂拒绝。", speedWrite:"支付时间精力金钱，最后两手空空。", fingerprint:"HHH-HHH-HHH-HHH-HHH", mbtiX:"ESFJ·付出人格", similar:"感恩者·伪人", rare:"稀有度 1.95%", fifteenDetail:"边界感L·自我清晰度L" },
+        { code:"OJBK", name:"无所谓人", imgSymbol:"🙌", avatar:"images/ojbk.png", desc:"都行·可以·没关系", speedWrite:"统治哲学级人格，以不变应万变。", fingerprint:"MMM-MMM-MMM-MMM-MMM", mbtiX:"ISFP · 随性艺术家", similar:"僧人·死者", rare:"最常见 9.92%", fifteenDetail:"全M中值，波澜不惊" },
+        { code:"MONK", name:"僧人", imgSymbol:"🧘", avatar:"images/monk.png", desc:"主动降噪，看破不说破。", speedWrite:"欲望降级，万物独立运行。", fingerprint:"MLM-LLL-LLL-MLM-LLL", mbtiX:"INTP · 观察隐士", similar:"无所谓人·死者", rare:"稀有度 3.84%", fifteenDetail:"世界观M·情感投入L" },
+        { code:"DEAD", name:"死者", imgSymbol:"🪦", avatar:"images/dead.png", desc:"精神已死，肉体苟活。", speedWrite:"没有期望就没有失望。", fingerprint:"LLL-LLL-LLL-LLL-LLL", mbtiX:"INTP/ISTP · 虚无主义", similar:"装死者·废物感", rare:"稀有度 1.84%", fifteenDetail:"全L，终极贤者" },
+        { code:"MALO", name:"吗喽", imgSymbol:"🐒", avatar:"images/malo.png", desc:"打工人之魂，拒绝内卷。", speedWrite:"人生是副本，我只是一只猴，苦中作乐。", fingerprint:"LMM-MLL-MLL-LMM-LMM", mbtiX:"INFP · 摆烂诗人", similar:"贫穷者·屌丝", rare:"稀有度 5.88%", fifteenDetail:"自尊L·行动M·边界M" },
+        { code:"FAKE", name:"伪人", imgSymbol:"🎭", avatar:"images/fake.png", desc:"社交变色龙，面具太厚。", speedWrite:"见谁都能聊，散场后只剩空虚。", fingerprint:"HHH-HHH-HHH-HHH-HHH", mbtiX:"ENFP·适应者", similar:"尤物·小丑", rare:"稀有度 3.56%", fifteenDetail:"表达真实度L·社交主动性H" },
+        { code:"SEXY", name:"尤物", imgSymbol:"💅", avatar:"images/sexy.png", desc:"自带气场，高自尊。", speedWrite:"并不是轻浮，而是高自尊+强边界。", fingerprint:"HHM-HMH-HHH-HHH-HHM", mbtiX:"ENTP·魅力之星", similar:"领导者·伪人", rare:"稀有度 2.06%", fifteenDetail:"自尊H·边界感H" },
+        { code:"SOLO", name:"孤独人", imgSymbol:"🌙", avatar:"images/solo.png", desc:"独行侠，不粘不缠。", speedWrite:"一个人也很好，享受精神自留地。", fingerprint:"LLL-LLL-LLL-LLL-LLL", mbtiX:"ISTJ·孤狼", similar:"僧人·死者", rare:"稀有度 4.13%", fifteenDetail:"社交主动性L" },
+        { code:"JOKE-R", name:"小丑", imgSymbol:"🤡", avatar:"images/joke-r.png", desc:"用幽默掩饰悲伤。", speedWrite:"用幽默抵御世界的荒诞。", fingerprint:"MHM-MHM-MHM-MHM-MHM", mbtiX:"ENFP·悲喜剧演员", similar:"伪人·傻乐者", rare:"稀有度 3.23%", fifteenDetail:"情感投入M" },
+        { code:"FUCK", name:"暴躁人", imgSymbol:"🤬", avatar:"images/fuck.png", desc:"情绪外放，遇事直接炸。", speedWrite:"看不惯就怼，优点是真性情。", fingerprint:"HHH-MMM-MMM-MLL-MLL", mbtiX:"ESTJ·烈火", similar:"草者·握草人", rare:"稀有度 4.45%", fifteenDetail:"自尊H·决策快速" },
+        { code:"WOC", name:"握草人", imgSymbol:"🤯", avatar:"images/woc.png", desc:"互联网前线，每天都在震惊。", speedWrite:"每天都有新三观被刷新。", fingerprint:"HHH-HHH-HHH-HHH-HHH", mbtiX:"ESFP·好奇宝宝", similar:"暴躁人·傻乐者", rare:"稀有度 2.50%", fifteenDetail:"社交主动性H" },
+        { code:"SHIT", name:"狗屎人", imgSymbol:"💩", avatar:"images/shit.png", desc:"愤世嫉俗，人间清醒。", speedWrite:"这世界就是一坨构史。", fingerprint:"HHL-HHL-HHL-HHL-HHL", mbtiX:"INTJ·批判者", similar:"死者·暴躁人", rare:"稀有度 4.34%", fifteenDetail:"世界观L·情感投入L" },
+        { code:"POOR", name:"贫穷者", imgSymbol:"🥬", avatar:"images/poor.png", desc:"精打细算，依然吃土。", speedWrite:"钱总是不够花，穷开心。", fingerprint:"MMM-MMM-MMM-MMM-MMM", mbtiX:"ISFJ·节俭卫士", similar:"吗喽·屌丝", rare:"稀有度 5.26%", fifteenDetail:"行动M·动机M" },
+        { code:"IMFW", name:"废物感", imgSymbol:"🗑️", avatar:"images/imfw.png", desc:"知道该努力，但动不了。", speedWrite:"陷入长期动力缺失，自嘲废物。", fingerprint:"LLL-LLL-LLL-LLL-LLL", mbtiX:"INFP·无力型", similar:"自我攻击者·死者", rare:"稀有度 2.63%", fifteenDetail:"执行模式L" },
+        { code:"DIOR", name:"屌丝", imgSymbol:"🧦", avatar:"images/dior.png", desc:"不甘平凡但暂时普通。", speedWrite:"内心渴望逆袭，嘴上躺平。", fingerprint:"LLM-LLM-LLM-LLM-LLM", mbtiX:"ISTP·挣扎者", similar:"吗喽·贫穷者", rare:"稀有度 3.82%", fifteenDetail:"自尊L·意义感M" },
+        { code:"THINK", name:"思考者", imgSymbol:"🤔", avatar:"images/think.png", desc:"事前反复推演，谋定后动。", speedWrite:"看似犹豫，实则在提高胜率。", fingerprint:"HHM-HHM-HHM-HHM-HHM", mbtiX:"INTP·理性沉思", similar:"领导者·拿捏者", rare:"稀有度 3.20%", fifteenDetail:"决策风格M·执行模式H" },
+        { code:"LOVE-R", name:"多情者", imgSymbol:"💘", avatar:"images/love-r.png", desc:"容易心动，投入热烈。", speedWrite:"恋爱脑处理器是彩虹色的。", fingerprint:"HHM-MHH-MHM-HHH-HHL", mbtiX:"ENFJ·浪漫主义", similar:"妈妈·ATM-er", rare:"稀有度 1.43%", fifteenDetail:"依恋安全感H·边界L" },
+        { code:"DRUNK", name:"酒鬼(隐藏)", imgSymbol:"🍻", avatar:"images/drunk.png", desc:"酒精做生活缓冲液。", speedWrite:"无酒不欢，今朝有酒今朝醉。", fingerprint:"特殊门控", mbtiX:"ESFP·及时行乐", similar:"傻乐者·无所谓人", rare:"最稀有 0.17%", fifteenDetail:"世界观M·社交H" },
+        { code:"HHHH", name:"傻乐者", imgSymbol:"😆", avatar:"images/hhhh.png", desc:"生活一团糟，依然笑出声。", speedWrite:"用傻乐对抗现实烦恼，兜底幸运儿。", fingerprint:"匹配度兜底", mbtiX:"ENFP·快乐小狗", similar:"无所谓人·酒鬼", rare:"理论最稀有 0.06%", fifteenDetail:"极端乐观主义" },
+        { code:"FUCKER", name:"草者", imgSymbol:"🌿", avatar:"images/fucker.png", desc:"暴躁与躺平之间横跳。", speedWrite:"野火烧不尽，春风吹又生。", fingerprint:"HHM-MML-MML-HML-MLL", mbtiX:"ESTP·反骨执行", similar:"暴躁人·行者", rare:"稀有度 4.45%", fifteenDetail:"世界观M·执行M" },
+        { code:"ZZZZ", name:"装死者", imgSymbol:"😴", avatar:"images/zzzz.png", desc:"用装死逃避一切。", speedWrite:"遇事就拖，直到最后一刻爆发。", fingerprint:"LLM-LLL-LLL-MLL-LLM", mbtiX:"ISTJ·拖延型", similar:"死者·无所谓人", rare:"稀有度 4.32%", fifteenDetail:"行动L·规则灵活M" }
+    ];
+
+    // 渲染卡片：优先使用本地 avatar，加载失败则显示 imgSymbol (emoji)
+    function renderPersonaCard(p) {
+        return `
+            <div class="persona-card" data-code="${p.code}">
+                <div class="persona-img">
+                    <img src="${p.avatar}" alt="${p.name}" 
+                         onerror="this.onerror=null; this.parentElement.innerHTML='${p.imgSymbol}'; this.parentElement.style.fontSize='2.4rem'; this.parentElement.style.display='flex'; this.parentElement.style.alignItems='center'; this.parentElement.style.justifyContent='center';">
+                </div>
+                <div class="persona-name">${p.name} · ${p.code}</div>
+                <div class="persona-desc">${p.desc}</div>
+                <div class="badge-mini">⚡ 点击查看完整档案</div>
+            </div>
+        `;
+    }
+
+    function renderAllCards() {
+        const featuredCodes = ["BOSS", "IMSB", "MALO", "OJBK"];
+        const featuredPersonas = PERSONAS.filter(p => featuredCodes.includes(p.code));
+        const containerFeatured = document.getElementById('featuredGrid');
+        if(containerFeatured) containerFeatured.innerHTML = featuredPersonas.map(p => renderPersonaCard(p)).join('');
+        
+        const fullContainer = document.getElementById('fullGrid');
+        if(fullContainer) fullContainer.innerHTML = PERSONAS.map(p => renderPersonaCard(p)).join('');
+    }
+
+    // 弹窗详情，同样优先本地图片
+    function showModal(persona) {
+        const modal = document.getElementById('personaModal');
+        const modalContent = document.getElementById('modalContent');
+        if(!modalContent) return;
+        modalContent.innerHTML = `
+            <div class="modal-avatar">
+                <img src="${persona.avatar}" alt="${persona.name}" 
+                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'modal-emoji-fallback\'>${persona.imgSymbol}</div>';">
+            </div>
+            <div class="modal-title">${persona.name} · ${persona.code}</div>
+            <div class="modal-sub">${persona.desc}</div>
+            <div class="modal-detail">
+                <strong>📝 人格速写</strong><br>${persona.speedWrite}<br><br>
+                <strong>🧬 十五维指纹 (BOSS模板)</strong><br>${persona.fingerprint}<br><span style="font-size:0.7rem;">${persona.fifteenDetail}</span><br><br>
+                <strong>🔄 BOSS × MBTI 交叉解读</strong><br>${persona.mbtiX}<br><br>
+                <strong>👥 相似人格推荐</strong><br>${persona.similar}<br><br>
+                <strong>📊 ${persona.rare}</strong>
+                <div class="dimension-block">✨ SBTI采用15维曼哈顿距离匹配，涵盖自我/情感/态度/行动/社交五大模型。每个角色都配有您提供的本地卡通肖像。点击复制链接，让你的AI亲自探寻隐层人格。</div>
+            </div>
+        `;
+        modal.classList.add('active');
+    }
+
+    // 事件绑定 (委托)
+    function bindGlobalCardEvents() {
+        document.querySelectorAll('.persona-card').forEach(card => {
+            card.removeEventListener('click', card._clickHandler);
+            const handler = () => {
+                const code = card.dataset.code;
+                const found = PERSONAS.find(p => p.code === code);
+                if(found) showModal(found);
+            };
+            card.addEventListener('click', handler);
+            card._clickHandler = handler;
+        });
+    }
+
+    let fullVisible = false;
+    function toggleFullGrid() {
+        const container = document.getElementById('fullGridContainer');
+        const btn = document.getElementById('toggleAllBtn');
+        if(!container || !btn) return;
+        if(fullVisible) {
+            container.classList.remove('show');
+            btn.innerHTML = '🔍 探索全部27种人格 ▼';
+        } else {
+            container.classList.add('show');
+            btn.innerHTML = '▲ 收起人格列表';
+            bindGlobalCardEvents(); // 新卡片绑定事件
+        }
+        fullVisible = !fullVisible;
+    }
+
+    function setPageUrl() {
+        const urlSpan = document.getElementById('pageUrlDisplay');
+        if(urlSpan) urlSpan.innerText = window.location.href;
+    }
+    function copyUrl() {
+        navigator.clipboard.writeText(window.location.href).then(() => alert('✅ 链接已复制！快去交给你的AI测试吧')).catch(() => alert('手动复制地址栏链接'));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderAllCards();
+        setPageUrl();
+        bindGlobalCardEvents();
+        
+        const copyBtn = document.getElementById('copyUrlBtn');
+        if(copyBtn) copyBtn.addEventListener('click', copyUrl);
+        const toggleBtn = document.getElementById('toggleAllBtn');
+        if(toggleBtn) toggleBtn.addEventListener('click', toggleFullGrid);
+        const closeModal = document.getElementById('closeModalBtn');
+        const modalBg = document.getElementById('personaModal');
+        if(closeModal) closeModal.addEventListener('click', () => modalBg.classList.remove('active'));
+        if(modalBg) modalBg.addEventListener('click', (e) => { if(e.target === modalBg) modalBg.classList.remove('active'); });
+    });
+</script>
+</body>
+</html>
